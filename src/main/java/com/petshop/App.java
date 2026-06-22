@@ -1,11 +1,11 @@
 package com.petshop;
 
+import com.petshop.config.DatabaseConfig;
+import com.petshop.config.RouteConfig;
+import com.petshop.config.ThymeleafConfig;
 import io.javalin.Javalin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.thymeleaf.TemplateEngine;
-import org.thymeleaf.context.Context;
-import org.thymeleaf.templateresolver.ClassLoaderTemplateResolver;
 
 public class App {
 
@@ -14,30 +14,17 @@ public class App {
     public static void main(String[] args) {
         logger.info("Iniciando PetShop...");
 
+        DatabaseConfig.init();
 
-        var resolver = new ClassLoaderTemplateResolver();
-        resolver.setPrefix("/templates/");
-        resolver.setSuffix(".html");
-        resolver.setTemplateMode("HTML");
-        resolver.setCharacterEncoding("UTF-8");
-
-        var engine = new TemplateEngine();
-        engine.setTemplateResolver(resolver);
-
+        var engine = ThymeleafConfig.buildEngine();
 
         var app = Javalin.create();
-        app.get("/ping", ctx -> ctx.json(java.util.Map.of("status", "ok")));
 
+        RouteConfig.register(app, engine);
 
-        app.get("/", ctx -> {
-            logger.info("GET /");
-            var context = new Context();
-            context.setVariable("mensagem", "PetShop!");
-            ctx.html(engine.process("index", context));
-        });
-
-
-        int port = Integer.parseInt(System.getenv().getOrDefault("PORT", "8080"));
+        int port = Integer.parseInt(
+            System.getenv().getOrDefault("PORT", "8080")
+        );
         app.start(port);
 
         logger.info("PetShop iniciado na porta {}", port);
